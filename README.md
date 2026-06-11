@@ -12,7 +12,7 @@ Empowering independence for individuals with disabilities through intelligent we
 
 Our Team Unfazed project Lumos AI Glasses won **India's largest GenAI student challenge** at the **OpenAI Academy × NxtWave Buildathon Maharashtra**, receiving a prize of **₹5,00,000** at the India AI Impact Summit 2026.
 
-📰 [Read the article →]([https://etedge-insights.com/trending/openai-academy-x-nxtwave-buildathon-maharashtra-teamwins-indias-largest-genai-student-challenge-at-india-ai-impact-summit-2026/](https://share.google/VNxlNyeiBQ9nrMTYk))
+📰 [Read the article →]([https://share.google/VNxlNyeiBQ9nrMTYk])
 
 ---
 
