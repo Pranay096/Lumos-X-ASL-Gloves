@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C++ / Arduino builds
+.build/
+build/
+bin/
+out/
+*.hex
+*.elf
+*.bin
+.pio/
+.pioenvs/
+
+# Virtual Environments
+venv/
+.venv/
+env/
+.env
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Heavy Model Weights / CAD Build caches (Exclude if too large)
+# Uncomment the line below to ignore actual model weights in git
+# *.pt
+# *.onnx
+
+# Eagle/KiCad temporary files
+*.b#*
+*.s#*
+*.l#*
+*.kicad_pcb-bak
