@@ -236,7 +236,7 @@ User Understands Through Touch
 **Installation**
 
 ```bash
-git clone https://github.com/yourusername/Lumos-X-ASL-Gloves.git
+git clone https://github.com/Pranay096/Lumos-X-ASL-Gloves.git
 cd Lumos-X-ASL-Gloves
 pip install -r requirements.txt
 ```
@@ -311,8 +311,6 @@ Lumos has been fully developed and validated as a working prototype.
 - [ ] Integration testing
 
 Final wearable implementation will be completed during **Round 2**.
-
-📽️ **Project Explanation Video:** <!-- Add link here -->
 
 ---
 
