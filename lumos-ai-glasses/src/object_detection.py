@@ -1,50 +1,155 @@
+
+Pranay Pelapkar <pranaypelapkar11@gmail.com>
+15:00 (0 minutes ago)
+to pranaytp24hcompe
+
+import threading
+import requests
+import base64
+from PIL import Image
+from io import BytesIO
+from picamera2 import Picamera2
 import cv2
-from ultralytics import YOLO
+from flask import Flask, Response, jsonify
 
-class ObjectDetector:
-    def __init__(self, model_path="models/yolov8n.pt"):
-        print(f"Loading YOLOv8 model from {model_path}...")
-        self.model = YOLO(model_path)
+# ========= CONFIG =========
+GEMINI_API_KEY = "AIzaSyCXuh_ZoP5X0PRLyjSKBhDSELln6BWbSUg"
 
-    def detect(self, frame):
-        # Run inference
-        results = self.model(frame)
-        
-        # Parse results and extract labels
-        detections = []
-        for result in results:
-            for box in result.boxes:
-                class_id = int(box.cls[0])
-                label = self.model.names[class_id]
-                confidence = float(box.conf[0])
-                x1, y1, x2, y2 = map(int, box.xyxy[0])
-                detections.append({
-                    "label": label,
-                    "confidence": confidence,
-                    "bbox": (x1, y1, x2, y2)
-                })
-        return detections
+# ========= CAMERA =========
+picam2 = Picamera2()
+picam2.configure(picam2.create_preview_configuration(
+    main={"size": (480, 360)}   # ⭐ faster + stable
+))
+picam2.start()
 
+# ========= FLASK =========
+app = Flask(__name__)
+
+# ========= CAMERA STREAM =========
+def generate_preview():
+    while True:
+        frame = picam2.capture_array()
+        frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+
+        ret, buffer = cv2.imencode('.jpg', frame, [int(cv2.IMWRITE_JPEG_QUALITY), 60])
+        frame_bytes = buffer.tobytes()
+
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+
+@app.route('/')
+def video_feed():
+    return Response(generate_preview(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
+# ========= GEMINI =========
+def gemini_request(img, prompt):
+
+    img = img.resize((480, 360))
+    buffer = BytesIO()
+    img.save(buffer, format="JPEG", quality=55)
+    img_b64 = base64.b64encode(buffer.getvalue()).decode()
+
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
+
+    payload = {
+        "contents": [{
+            "parts": [
+                {"text": prompt},
+                {"inline_data": {"mime_type": "image/jpeg", "data": img_b64}}
+            ]
+        }]
+    }
+
+    try:
+        r = requests.post(url, json=payload, timeout=20)
+        return r.json()["candidates"][0]["content"]["parts"][0]["text"]
+    except:
+        return "Network slow. Try again."
+
+# ========= SCAN =========
+@app.route("/scan")
+def scan():
+
+    frame = picam2.capture_array()
+    img = Image.fromarray(frame).convert("RGB")
+
+    desc = gemini_request(
+        img,
+        "Describe ONLY visible obstacles and safest walking direction in MAX 2 short sentences."
+    )
+
+    return jsonify({"response": desc})
+
+# ========= OCR =========
+@app.route("/read")
+def read():
+
+    frame = picam2.capture_array()
+    img = Image.fromarray(frame).convert("RGB")
+
+    text = gemini_request(
+        img,
+        "Extract ONLY clearly readable printed text in one short sentence."
+    )
+
+    return jsonify({"response": text})
+
+# ========= UI =========
+@app.route("/ui")
+def ui():
+    return """
+    <html>
+    <body style="background:black;color:white;text-align:center;font-family:Arial">
+
+    <h1>🔮 Lumos Vision</h1>
+
+    <img src="/" width="480"><br><br>
+
+    <button onclick="scan()" style="padding:15px;font-size:18px">Scan</button>
+    <button onclick="read()" style="padding:15px;font-size:18px">Read</button>
+
+    <p id="res"></p>
+
+    <script>
+    function speak(t){
+        let s = new SpeechSynthesisUtterance(t);
+        s.rate = 1;
+        speechSynthesis.speak(s);
+    }
+
+    function scan(){
+        fetch('/scan')
+        .then(r=>r.json())
+        .then(d=>{
+            document.getElementById('res').innerText=d.response;
+            speak(d.response);
+        });
+    }
+
+    function read(){
+        fetch('/read')
+        .then(r=>r.json())
+        .then(d=>{
+            document.getElementById('res').innerText=d.response;
+            speak(d.response);
+        });
+    }
+    </script>
+
+    </body>
+    </html>
+    """
+
+# ========= MAIN =========
 if __name__ == "__main__":
-    detector = ObjectDetector()
-    cap = cv2.VideoCapture(0)
-    
-    print("Starting Object Detection Stream (press 'q' to exit)...")
-    while cap.isOpened():
-        ret, frame = cap.read()
-        if not ret:
-            break
-            
-        detections = detector.detect(frame)
-        for det in detections:
-            x1, y1, x2, y2 = det["bbox"]
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(frame, f"{det['label']} {det['confidence']:.2f}", 
-                        (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            
-        cv2.imshow("Object Detection", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-            
-    cap.release()
-    cv2.destroyAllWindows()
+
+    import socket
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8",80))
+    ip = s.getsockname()[0]
+    s.close()
+
+    print("⭐ Open Lumos at → http://" + ip + ":5000/ui")
+
+    app.run(host="0.0.0.0", port=5000)
