@@ -1,37 +1,27 @@
+import socket
 import speech_recognition as sr
 
-class SpeechTranscriber:
-    def __init__(self):
-        self.recognizer = sr.Recognizer()
-        self.microphone = sr.Microphone()
-        print("Speech Transcriber initialized.")
+ESP32_IP = "192.168.0.8"  #add your esp32 ip here
+PORT = 1234
 
-    def transcribe_live(self, callback):
-        with self.microphone as source:
-            print("Calibrating microphone ambient noise...")
-            self.recognizer.adjust_for_ambient_noise(source)
-            print("Ready! Speak clearly into the microphone.")
-            
-            while True:
-                try:
-                    audio = self.recognizer.listen(source, timeout=5, phrase_time_limit=10)
-                    print("Processing speech...")
-                    text = self.recognizer.recognize_google(audio)
-                    callback(text)
-                except sr.WaitTimeoutError:
-                    continue
-                except sr.UnknownValueError:
-                    print("Could not understand audio.")
-                except sr.RequestError as e:
-                    print(f"Speech recognition service error: {e}")
-                    break
+r = sr.Recognizer()
+mic = sr.Microphone()
 
-def print_transcript(text):
-    print(f"Transcribed Text: {text}")
+print("Speak...")
 
-if __name__ == "__main__":
-    transcriber = SpeechTranscriber()
+while True:
+    with mic as source:
+        r.adjust_for_ambient_noise(source)
+        audio = r.listen(source)
+
     try:
-        transcriber.transcribe_live(print_transcript)
-    except KeyboardInterrupt:
-        print("\nExited speech transcribing.")
+        text = r.recognize_google(audio)
+        print("You said:", text)
+
+        s = socket.socket()
+        s.connect((ESP32_IP, PORT))
+        s.send((text + "\n").encode())
+        s.close()
+
+    except Exception as e:
+        print("Error:", e)
