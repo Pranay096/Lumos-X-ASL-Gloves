@@ -13,7 +13,7 @@ import cv2
 from flask import Flask, Response, jsonify
 
 # ========= CONFIG =========
-GEMINI_API_KEY = "AIzaSyCXuh_ZoP5X0PRLyjSKBhDSELln6BWbSUg"
+GEMINI_API_KEY = "YOUR API KEY"
 
 # ========= CAMERA =========
 picam2 = Picamera2()
