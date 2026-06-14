@@ -159,7 +159,8 @@ User Understands Through Touch
 ### Lumos AI Glasses
 
 <!-- Add Lumos CAD render here -->
-![Lumos CAD](lumos-ai-glasses/hardware/CAD/renders/FULL VIEW.jpeg)
+![Lumos CAD](lumos-ai-glasses/hardware/CAD/renders/FULL%20VIEW.jpeg)
+
 ![Lumos Schematic](assets/images/glasses_schematic.png)
 
 ### ASL Gloves
